@@ -4,24 +4,25 @@ const server = express();
 
 server.use(express.json());
 
-const projects = [{ id: "1", title: "Project 1", tasks: [] }];
+const projects = [{ id: "1", title: "Projeto 01", tasks: [] }];
+let numberOfRequests = 0;
 
-let numberOfRequest = 0;
-function checkProjectExists(req, res, next) {
+function checkProjectExist(req, res, next) {
   const { id } = req.params;
+
   const project = projects.find(projects => projects.id === id);
 
   if (!project) {
-    return res.status(400).json({ error: "Project not exist" });
+    return res.status(400).send({ error: "Project not found" });
   }
 
   return next();
 }
 
 function logRequests(req, res, next) {
-  numberOfRequest++;
+  numberOfRequests++;
+  console.log(`Number requests: ${numberOfRequests}`);
 
-  console.log(`Number of requests: ${numberOfRequest}`);
   return next();
 }
 
@@ -32,25 +33,23 @@ server.get("/projects", (req, res) => {
 });
 
 server.post("/projects", (req, res) => {
-  const { id, title, tasks } = req.body;
+  const { id, title, task } = req.body;
 
-  projects.push({ id: id, title: title, tasks: tasks });
-
+  projects.push({ id: id, title: title, tasks: task });
   return res.json(projects);
 });
 
-server.post("/projects/:id/tasks", checkProjectExists, (req, res) => {
+server.post("/projects/:id/tasks", checkProjectExist, (req, res) => {
   const { id } = req.params;
   const { title } = req.body;
 
-  const project = projects.find(projects => projects.id === id);
+  const project = projects.find(p => p.id === id);
 
   project.tasks.push(title);
-
   return res.json(project);
 });
 
-server.put("/projects/:id", checkProjectExists, (req, res) => {
+server.put("/projects/:id", checkProjectExist, (req, res) => {
   const { id } = req.params;
   const { title } = req.body;
 
@@ -60,7 +59,7 @@ server.put("/projects/:id", checkProjectExists, (req, res) => {
   return res.json(projects[index]);
 });
 
-server.delete("/projects/:id", checkProjectExists, (req, res) => {
+server.delete("/projects/:id", checkProjectExist, (req, res) => {
   const { id } = req.params;
   const index = projects.findIndex(projects => projects.id === id);
 
